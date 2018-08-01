@@ -11,6 +11,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -46,7 +49,7 @@ public class Main extends Application {
 	 final TextField addPrice = new TextField();
 	 String[] itemDetails;
 	@Override
-	public void start(Stage primaryStage) throws IOException {
+	public void start(Stage primaryStage) throws IOException, URISyntaxException {
 		HBox MainHbox= new HBox();
 		VBox vbox1 = new VBox();
 		
@@ -187,22 +190,36 @@ public class Main extends Application {
 	        primaryStage.setTitle("Bakery Ordering System");
 	        primaryStage.setScene(scene);
 	        primaryStage.show();
-	       // reterving data from file pushing in string st;
+	        
+	        
+	        // retrieving data from file pushing in string
+	        
+	        URI databaseUri = getClass().getResource("database\\data.csv").toURI();
+        	File databaseFile = new File(databaseUri);
+        	FileInputStream fin = null;
+        	BufferedInputStream bin = null;
+        	DataInputStream din = null;
 	        try {
-	        FileReader f =  new FileReader("C:\\Users\\School\\eclipse-workspace\\javafx-bakery-order-system\\src\\application\\database\\data.csv");
-	        //FileInputStream fInS = new FileInputStream(f);
-			BufferedReader binS = new BufferedReader( f);
-			 String st =null;
-			while ((st = binS.readLine()) != null){
-				itemDetails = st.split(",");
-				System.out.println(itemDetails);	 
-				 }
-			 }
-			 catch (EOFException ex){
-				 System.out.println("end of file");
-				 
-			 }
-	      }
+	        	fin = new FileInputStream(databaseFile);
+	        	bin = new BufferedInputStream(fin);
+	        	din = new DataInputStream(bin);
+
+				while (din.available() != 0) {
+					System.out.println(din.readUTF());
+				}
+	        	
+	        } catch (EOFException ex){
+	        	System.out.println("end of file");
+	        } finally {
+	        	try {
+					fin.close();
+					bin.close();
+					din.close();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+	        }
+	}
 			
 	//eventHandler
 	
