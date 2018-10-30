@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -38,6 +39,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellEditEvent;
@@ -56,11 +58,15 @@ import javafx.scene.text.Font;
 
 
 public class Main extends Application {
+	TextField txtfld1 = new TextField();
+    TextField txtfld2 = new TextField();
+    GridPane grid = new GridPane();
+    Button signButton = new Button("Sign in");
 	 private TableView<FoodItem> table = new TableView<FoodItem>();
 	 private final ObservableList<FoodItem> itemList =
             FXCollections.observableArrayList();
-	 
-	public void start(Stage primaryStage) {	
+	// Main login window  
+	public void start(Stage primaryStage) throws IOException {	
 		
 		      Scene scene = new Scene(new Group(),500,500);
 		       
@@ -75,17 +81,28 @@ public class Main extends Application {
 		      grid.add(txtfld1,1,0);
 		      grid.add(new Label("Password"),0,1);
 		      grid.add(txtfld2,1,1);
-		     
-		      Button signButton = new Button("Sign in");
 		      grid.add(signButton,0,2);
 		      signButton.setOnAction(e -> {
-		    	  try {
-					salesorder();
+		      	try {
+		      		// validating
+		      		if(txtfld1.getText().isEmpty() || txtfld2.getText().isEmpty()) {
+		      			Alert alert = new Alert(Alert.AlertType.ERROR);
+						String content = "Please fill all requested fields";
+						alert.setContentText(content);
+						alert.showAndWait();
+		      		} else {
+		      			primaryStage.hide();
+		      			//pass value to second window
+		      			salesorder(txtfld1.getText());
+		      		}
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+		    	  
 		      });
+		      //checkRequestedFields();
+		      
 		      Group root = (Group) scene.getRoot();
 		       root.getChildren().add(grid);
 		       grid.setStyle("-fx-background-color: DAE6F3;");
@@ -98,7 +115,8 @@ public class Main extends Application {
 
 	
 //****************************************************************************************
-	private void salesorder() throws IOException{
+	// second window - bakery ordering System
+	private void salesorder(String cashier) throws IOException{
 		Stage stage = new Stage();
 
 	 
@@ -126,7 +144,7 @@ public class Main extends Application {
 		HBox hbox1 = new HBox();
 		
 		Label label1 = new Label("Cashier id");
-		
+		textfield1.setText(cashier);
 		hbox1.getChildren().addAll(label1,textfield1);
 		
 		HBox hbox2 = new HBox();
@@ -221,6 +239,7 @@ public class Main extends Application {
 	        vbox3.setPadding(new Insets(10,10,10,10));
 	        vbox3.getChildren().addAll(label, table);
 	        
+	        // create Delete and new bill button with event Handling functionality
 	        HBox hbox3 = new HBox();
 	       
 	        hbox3.setSpacing(15);
@@ -257,6 +276,8 @@ public class Main extends Application {
 	        
 	        
 	        //pushing all hbox and vbox in vbox1
+	        
+	        // Create file to read image , name and price from data.csv
 	        vbox1.getChildren().addAll(vbox2,vbox3,hbox3, hboxTotal);
 	        VBox vbox1A = new VBox(); 
 	        FlowPane itemPane = new FlowPane();
@@ -275,13 +296,13 @@ public class Main extends Application {
 	          if(fin != null) {
 		          VBox vbox4 = new VBox();
 			      Image image1 = new Image(fin);
+		    vbox4.setSpacing(10);
+			      
+			      
 			      ImageView imageview1 = new ImageView(image1);
 			      imageview1.setFitHeight(100);
 			      imageview1.setFitWidth(100);
-			      vbox4.setSpacing(10);
-			      
-			      
-			      Button buttonAdd1 = new Button("Add ($"+itemDetails[2]+")");
+			  	      Button buttonAdd1 = new Button("Add ($"+itemDetails[2]+")");
 			      buttonAdd1.getProperties().put("item", itemDetails[0]);
 			      buttonAdd1.setOnAction(new EventHandler<ActionEvent>() {
 			            public void handle(ActionEvent e) { 
@@ -306,7 +327,7 @@ public class Main extends Application {
 	          }
 	        }
 	        
-	        
+	        // Create credit 
 	        HBox hbox  = new HBox();
 	        hbox.setPadding(new Insets(15, 12, 15, 12));
 	        hbox.setSpacing(30);
@@ -315,43 +336,82 @@ public class Main extends Application {
 	        
 	        buttonCredit.setText("Credit");
 	        buttonCredit.setPrefSize(100, 20);
+	    
 	        buttonCredit.setOnAction(e -> {
-	        	showAlertOnButton(); 
-	        	 newBill();
+	        	System.out.println(itemList);
+	        	try {
+	        		if(table.getItems().isEmpty()) {
+		        		Alert alert = new Alert(Alert.AlertType.WARNING);
+						String content = "Please add item to order";
+						alert.setContentText(content);
+						alert.showAndWait();
+		        	} else {
+		        		saveBillData("Credit");
+			        	showAlertOnButton(); 
+			        	newBill();
+		        	}
+				} catch (ClassNotFoundException | URISyntaxException | IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 	        });
 	        
 	        buttonDebit.setText("Debit");
 	        buttonDebit.setPrefSize(100, 20);
 	        buttonDebit.setOnAction(e -> {
-	         showAlertOnButton();
-	        try {
-				saveBillData("debit");
-			} catch (ClassNotFoundException | URISyntaxException | IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-	         newBill();
-	        
+	        	if(table.getItems().isEmpty()) {
+	        		Alert alert = new Alert(Alert.AlertType.WARNING);
+					String content = "Please add item to order";
+					alert.setContentText(content);
+					alert.showAndWait();
+	        	} else {
+			        try {
+						saveBillData("debit");
+		        		showAlertOnButton();
+		   	         	newBill();
+					} catch (ClassNotFoundException | URISyntaxException | IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+	        	}
 	        });
 	     
 	        
 	        buttonCash .setText("Cash");
 	        buttonCash.setPrefSize(100, 20);
 	        buttonCash.setOnAction(e ->{ 
-	        	showAlertOnButton();
-	        	 newBill();
-	        		
-	        		
+	        	try {
+	        		if(table.getItems().isEmpty()) {
+		        		Alert alert = new Alert(Alert.AlertType.WARNING);
+						String content = "Please add item to order";
+						alert.setContentText(content);
+						alert.showAndWait();
+		        	} else {
+		        		saveBillData("Cash");
+			        	showAlertOnButton();
+			        	newBill();
+		        	}
+				} catch (ClassNotFoundException | URISyntaxException | IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 	        });
 	        
 	        hbox.getChildren().addAll(buttonCredit, buttonDebit,buttonCash);
 	        vbox1A.setSpacing(25);
-	        vbox1A.getChildren().addAll(itemPane,hbox);
+	        
+	        // create Report button
+	        VBox  vboxReport = new  VBox ();
+	        Button reportButton = new Button("Report");
+	        reportButton.setPrefSize(100, 20);
+	        vboxReport.getChildren().addAll(reportButton);
+	        
+	        vbox1A.getChildren().addAll(itemPane,hbox,reportButton);
 
 	        
 	        MainHbox.getChildren().addAll(vbox1, vbox1A);
 	        Scene scene = new Scene (MainHbox,800,800);
-	       /// Stage.setTitle("Bakery Ordering System");
+	       stage.setTitle("Bakery Ordering System");
 	        stage.setScene(scene);
 	        stage.show();
 	} 
@@ -361,7 +421,7 @@ public class Main extends Application {
 	        
 	       
 	
-			
+	// it will clear all existing fooditem from table		
 	private void newBill() {
 		table.getItems().clear();
 	}
@@ -377,7 +437,7 @@ public class Main extends Application {
              String[] array;
 
              while ((line = br.readLine()) != null){
-            	 //why we created array
+            	 //need of created array 
                  array = line.split(",");
                  if(array[0].equalsIgnoreCase(itemtype))
                 	 table.getItems().add(new FoodItem(array[0], array[2], "1"));
@@ -407,7 +467,7 @@ public class Main extends Application {
 		 return total*0.13;
 	 }
 	 
-	 //
+	 // tell which paymethod credit ,debit and cash is used by user
 	 private void showAlertOnButton() {
 		 Alert alert = new Alert(AlertType.CONFIRMATION);
 		 alert.setTitle("Payment Method ");
@@ -416,11 +476,12 @@ public class Main extends Application {
 		 alert.showAndWait();
 		 
 }
+	 // Create file which present bussiness Class all bill and calculation detail
 	 private void saveBillData(String paymentMethod) throws URISyntaxException, IOException, ClassNotFoundException {
 		 Bill2 bill = new Bill2();
 		 bill.setBillDate(new Date());
 		 bill.setBillNumber(Instant.now().toEpochMilli());
-		 bill.setPaymentMethod(paymentMethod);
+		 bill.setpaymentMethod(paymentMethod);
 		 bill.setFoodItems(itemList.toArray());
 		 bill.setTotal(calculateTotal());
 		 bill.setHst(calculateHST());
@@ -478,19 +539,70 @@ public class Main extends Application {
 			}
 		}
 		 
-//		 try {
-//			 fInS = new FileInputStream(databaseUrl.getPath());
-//			 dIns  = new ObjectInputStream(fInS);
-//			 while(fInS.available()!=0) {
-//				 Bill2 b = (Bill2) dIns.readObject();
-//			 }
-//		 } catch (Exception ex) {
-//			ex.printStackTrace();
-//		 } finally {
-//			
-//		}
-	 }		
-			
+
+	 }	
+	 //*************************************************************
+	// Third window Report
+	
+/* public void reportwindow() {
+	 Stage stage = new Stage();
+	 
+	 GridPane grid = new GridPane();
+     grid.setVgap(10);
+     grid.setHgap(10);
+     grid.setPadding(new Insets(20,20,20,20));
+     
+    
+     
+     TextField txtara1 = new TextField();
+      Button btn = new Button();
+       btn.setText("Report");
+        grid.add(btn,3,2);
+       btn.setOnAction(new EventHandler<ActionEvent>() {
+           
+           @Override
+           public void handle(ActionEvent event) {
+               Stage second= new Stage();
+               
+               GridPane panee= new GridPane();
+               Label lb = new Label("NO RECENT REPORTS AVAILABLE!");
+               panee.add(lb,0,7);
+               Scene scenee = new Scene(panee,800,400);
+               second.setScene(scenee);
+               second.show();
+           }
+       });
+     
+     grid.add(new Button("Weekly Sales"),1,0);
+     grid.add(new Button ("Monthly Sales"),2,0);
+     grid.add(new Label("Comment below any suggestion or query: "),0,0);
+     grid.add(txtara1,0,1);
+     Button print= new Button("PRINT");
+     grid.add(print,0,2);
+     print.setOnAction(e ->{
+          //  JOptionPane.showMessageDialog(null, "Please Connect The Printer with The device" );      
+     });
+     Button exp = new Button("Export");
+     grid.add(exp,2,2);
+     exp.setOnAction(e -> {
+     //JOptionPane.showMessageDialog(null, "Select your mode of exporting in Settings" );    });
+     
+     
+     
+      root.getChildren().add(grid);
+       
+      
+	 
+	 
+	 
+	 
+	 
+	 Scene scene = new Scene (grid,800,800);
+     stage.setTitle("Sales Text");
+      stage.setScene(scene);
+      stage.show();
+ }
+		*/
 
 	 
 	private void setEditable(boolean b) {

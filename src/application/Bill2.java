@@ -28,15 +28,15 @@ public class Bill2 implements Serializable{
 	public void setBillNumber(long billNumber) {
 		this.billNumber = billNumber;
 	}
-	public String getPaymentMethod() {
+	public String getpaymentMethod() {
 		return paymentMethod;
 	}
-	public void setPaymentMethod(String paymentMethod) {
+	public void setpaymentMethod(String paymentMethod) {
 		this.paymentMethod = paymentMethod;
 	}
 	@Override
 	public String toString() {
-		return "Bill2 [billNumber=" + billNumber + ", paymentMethod=" + paymentMethod + ", cashierId=" + cashierId
+		return "Bill2 [billNumber=" + billNumber + ", paymentMethod=" +paymentMethod + ", cashierId=" + cashierId
 				+ ", foodItems=" + foodItems + ", hst=" + hst + ", total=" + total + ", billDate=" + billDate + "]";
 	}
 	public int getCashierId() {
